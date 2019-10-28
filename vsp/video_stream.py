@@ -4,6 +4,7 @@ camera, file) and outputs/destinations (e.g., display, file).
 """
 
 from abc import ABC, abstractmethod
+from threading import Lock
 
 import cv2
 
@@ -172,21 +173,40 @@ class CvVideoInputFile(VideoInputStream):
 class CvVideoDisplay(VideoOutputStream):
     """OpenCV video display.
     """
+    class __CvVideoDisplay(VideoOutputStream):
+        def __init__(self):
+            self._lock = Lock()
+        def open(self, name):
+            with self._lock:
+                cv2.namedWindow(name, cv2.WINDOW_AUTOSIZE)
+
+        def write(self, name, frame):
+            with self._lock:
+                cv2.imshow(name, frame)
+                cv2.waitKey(1)
+
+        def close(self, name):
+            with self._lock:
+                cv2.destroyWindow(name)
+
+    instance = None
+
     def __init__(self, name='default'):
         self.name = name
 
-    def __call__(self, frame):        
+    def __call__(self, frame):
         return self.write(frame)
 
     def open(self):
-        cv2.namedWindow(self.name, cv2.WINDOW_AUTOSIZE)
-        
+        if not CvVideoDisplay.instance:
+            CvVideoDisplay.instance = CvVideoDisplay.__CvVideoDisplay()
+        CvVideoDisplay.instance.open(self.name)
+
     def write(self, frame):
-        cv2.imshow(self.name, frame)      
-        cv2.waitKey(1)
-    
+        CvVideoDisplay.instance.write(self.name, frame)
+
     def close(self):
-        cv2.destroyWindow(self.name)    
+        CvVideoDisplay.instance.close(self.name)
 
    
 class CvVideoOutputFile(VideoOutputStream):
