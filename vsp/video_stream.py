@@ -176,6 +176,7 @@ class CvVideoDisplay(VideoOutputStream):
     class __CvVideoDisplay(VideoOutputStream):
         def __init__(self):
             self._lock = Lock()
+
         def open(self, name):
             with self._lock:
                 cv2.namedWindow(name, cv2.WINDOW_AUTOSIZE)
