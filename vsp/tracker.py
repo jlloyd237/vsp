@@ -20,7 +20,7 @@ class NearestNeighbourTracker(Tracker):
     """
     def __init__(self, threshold, keypoints=None):
         self.threshold = threshold
-        self.keypoints = np.array(keypoints) if keypoints else keypoints
+        self.keypoints = np.array(keypoints) if keypoints else None
 
     def __call__(self, keypoints):        
         return self.track(keypoints)
@@ -42,3 +42,6 @@ class NearestNeighbourTracker(Tracker):
             replace_idxs = min_dist_idxs[min_dists < self.threshold]
             self.keypoints[replace_idxs] = replace_keypoints
         return self.keypoints.tolist()
+
+    def reset(self, keypoints=None):
+        self.keypoints = np.array(keypoints) if keypoints else None
