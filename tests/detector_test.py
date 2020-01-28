@@ -11,6 +11,7 @@ from vsp.detector import CvBlobDetector, optimize_blob_detector_params
 
 def main():
     with CvVideoCamera(is_color=False) as inp, CvVideoDisplay() as out:
+        out.open()
         frames = []
         for i in range(300):
             frame = inp.read()
