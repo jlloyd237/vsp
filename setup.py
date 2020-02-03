@@ -17,5 +17,5 @@ setup(
     author_email="jlloyd237@gmail.com",
     url="https://github.com/jlloyd237/vsp/",
     packages=["vsp", "vsp.pygrabber"],
-    install_requires=["numpy", "scipy", "opencv-python==3.4.5.20"]
+    install_requires=["numpy", "scipy", "opencv-python>=3.4.5.20"]
 )
