@@ -3,6 +3,7 @@
 camera, file) and outputs/destinations (e.g., display, file).
 """
 
+import os
 from abc import ABC, abstractmethod
 from threading import Lock
 
@@ -133,7 +134,7 @@ class CvVideoCamera(VideoInputStream):
 class CvVideoInputFile(VideoInputStream):
     """OpenCV video input file.
     """
-    def __init__(self, filename='default.mp4', is_color=True):
+    def __init__(self, filename="default.mp4", is_color=True):
         self.filename = filename
         self.is_color = is_color
 
@@ -192,7 +193,7 @@ class CvVideoDisplay(VideoOutputStream):
 
     instance = None
 
-    def __init__(self, name='default'):
+    def __init__(self, name="default"):
         self.name = name
 
     def __call__(self, frame):
@@ -214,7 +215,7 @@ class CvVideoOutputFile(VideoOutputStream):
     """OpenCV video output file.
     """
     def __init__(self,
-                 filename='default.mp4',
+                 filename="default.mp4",
                  fourcc_code='MP4V',
                  fps=30.0,
                  frame_size=(640, 480),
@@ -249,3 +250,56 @@ class CvVideoOutputFile(VideoOutputStream):
     
     def close(self):
         self._writer.release()
+
+
+class CvImageOutputFileSeq(VideoOutputStream):
+    """OpenCV image output file sequence.
+    """
+    def __init__(self, filename="default.jpg", start_frame=0):
+        self.filename_root, self.filename_ext = os.path.splitext(filename)
+        self.start_frame = start_frame
+        self.frame_id = 0
+
+    def __call__(self, frame):
+        return self.write(frame)
+
+    def open(self):
+        pass
+
+    def write(self, frame):
+        if self.frame_id >= self.start_frame:
+            cv2.imwrite(self.filename_root + '_' + str(self.frame_id) + '.' + self.filename_ext, frame)
+            self.frame_id += 1
+
+    def close(self):
+        pass
+
+
+class CvImageInputFileSeq(VideoInputStream):
+    """OpenCV image input file sequence.
+    """
+
+    def __init__(self, filename="default.jpg"):
+        # For filename="root.ext", image files should be named "root_0.ext", "root_1.ext", ...
+        self.filename_root, self.filename_ext = os.path.splitext(filename)
+        self.frame_id = 0
+
+    def __call__(self):
+        return self.read()
+
+    def open(self):
+        pass
+
+    def read(self):
+        frame = cv2.imread(self.filename_root + '_' + str(self.frame_id) + '.' + self.filename_ext,
+                           cv2.IMREAD_UNCHANGED)
+        if frame is None:
+            raise EOFError
+        self.frame_id += 1
+        return frame
+
+    def eof(self):
+        return False
+
+    def close(self):
+        pass
