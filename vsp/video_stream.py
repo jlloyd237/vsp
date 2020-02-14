@@ -256,7 +256,7 @@ class CvImageOutputFileSeq(VideoOutputStream):
     """OpenCV image output file sequence.
     """
     def __init__(self, filename="default.jpg", start_frame=0):
-        self.filename_root, self.filename_ext = os.path.splitext(filename)
+        self.filename = filename
         self.start_frame = start_frame
         self.frame_id = 0
 
@@ -264,7 +264,8 @@ class CvImageOutputFileSeq(VideoOutputStream):
         return self.write(frame)
 
     def open(self):
-        pass
+        self.filename_root, self.filename_ext = os.path.splitext(self.filename)
+        self.frame_id = 0
 
     def write(self, frame):
         if self.frame_id >= self.start_frame:
@@ -272,7 +273,7 @@ class CvImageOutputFileSeq(VideoOutputStream):
             self.frame_id += 1
 
     def close(self):
-        pass
+        self.frame_id = 0
 
 
 class CvImageInputFileSeq(VideoInputStream):
@@ -281,14 +282,15 @@ class CvImageInputFileSeq(VideoInputStream):
 
     def __init__(self, filename="default.jpg"):
         # For filename="root.ext", image files should be named "root_0.ext", "root_1.ext", ...
-        self.filename_root, self.filename_ext = os.path.splitext(filename)
+        self.filename = filename
         self.frame_id = 0
 
     def __call__(self):
         return self.read()
 
     def open(self):
-        pass
+        self.filename_root, self.filename_ext = os.path.splitext(self.filename)
+        self.frame_id = 0
 
     def read(self):
         frame = cv2.imread(self.filename_root + '_' + str(self.frame_id) + self.filename_ext,
@@ -302,4 +304,4 @@ class CvImageInputFileSeq(VideoInputStream):
         return False
 
     def close(self):
-        pass
+        self.frame_id = 0
