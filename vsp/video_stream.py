@@ -269,8 +269,8 @@ class CvImageOutputFileSeq(VideoOutputStream):
 
     def write(self, frame):
         if self.frame_id >= self.start_frame:
-            cv2.imwrite(self.filename_root + '_' + str(self.frame_id) + self.filename_ext, frame)
-            self.frame_id += 1
+            cv2.imwrite(self.filename_root + '_' + str(self.frame_id - self.start_frame) + self.filename_ext, frame)
+        self.frame_id += 1
 
     def close(self):
         self.frame_id = 0

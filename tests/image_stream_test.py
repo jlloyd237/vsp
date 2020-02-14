@@ -11,7 +11,7 @@ from vsp.video_stream import CvVideoCamera, CvVideoDisplay, \
 def main():
     with CvVideoCamera(is_color=False) as inp, \
         CvVideoDisplay() as out1, \
-        CvImageOutputFileSeq("demo.jpg") as out2:
+        CvImageOutputFileSeq("demo.jpg", start_frame=1) as out2:
 
         out1.open()
         out2.open()
