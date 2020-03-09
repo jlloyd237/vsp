@@ -42,6 +42,7 @@ def main():
         #        keypoints = p.process(num_frames=300)
         print(f"keypoints.shape = {keypoints.shape}")
         print(f"keypoints[0] = {keypoints[0]}")
+        init_keypoints = keypoints[0]
 
         keypoints = p.process(num_frames=150, outfile="demo2.mp4")
         #        keypoints = p.process(num_frames=150)
@@ -67,7 +68,7 @@ def main():
                     min_convexity=0.60,
                 ),
                 # CvContourBlobDetector(),
-                NearestNeighbourTracker(threshold=20),
+                NearestNeighbourTracker(threshold=20, keypoints=init_keypoints),
                 KeypointEncoder(),
             ],
             view=KeypointView(color=(0, 255, 0)),
