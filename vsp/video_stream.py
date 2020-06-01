@@ -10,6 +10,97 @@ from threading import Lock
 import cv2
 
 
+CV_VIDEO_CAPTURE_APIS = {
+    'ANY': 0,
+    'VFW': 200,
+    'V4L': 200,
+    'V4L2': 200,
+    'FIREWIRE': 300,
+    'FIREWARE': 300,
+    'IEEE1394': 300,
+    'DC1394': 300,
+    'CMU1394': 300,
+    'QT': 500,
+    'UNICAP': 600,
+    'DSHOW': 700,
+    'PVAPI': 800,
+    'OPENNI': 900,
+    'OPENNI_ASUS': 910,
+    'ANDROID': 1000,
+    'XIAPI': 1100,
+    'AVFOUNDATION': 1200,
+    'GIGANETIX': 1300,
+    'MSMF': 1400,
+    'WINRT': 1410,
+    'INTELPERC': 1500,
+    'OPENNI2': 1600,
+    'OPENNI2_ASUS': 1610,
+    'GPHOTO2': 1700,
+    'GSTREAMER': 1800,
+    'FFMPEG': 1900,
+    'IMAGES': 2000,
+    'ARAVIS': 2100,
+    'OPENCV_MJPEG': 2200,
+    'INTEL_MFX': 2300,
+    'XINE': 2400,
+}
+
+CV_VIDEO_CAPTURE_PROPERTIES = {
+    'PROP_POS_MSEC': 0,
+    'PROP_POS_FRAMES': 1,
+    'PROP_POS_AVI_RATIO': 2,
+    'PROP_FRAME_WIDTH': 3,
+    'PROP_FRAME_HEIGHT': 4,
+    'PROP_FPS': 5,
+    'PROP_FOURCC': 6,
+    'PROP_FRAME_COUNT': 7,
+    'PROP_FORMAT': 8,
+    'PROP_MODE': 9,
+    'PROP_BRIGHTNESS': 10,
+    'PROP_CONTRAST': 11,
+    'PROP_SATURATION': 12,
+    'PROP_HUE': 13,
+    'PROP_GAIN': 14,
+    'PROP_EXPOSURE': 15,
+    'PROP_CONVERT_RGB': 16,
+    'PROP_WHITE_BALANCE_BLUE_U': 17,
+    'PROP_RECTIFICATION': 18,
+    'PROP_MONOCHROME': 19,
+    'PROP_SHARPNESS': 20,
+    'PROP_AUTO_EXPOSURE': 21,
+    'PROP_GAMMA': 22,
+    'PROP_TEMPERATURE': 23,
+    'PROP_TRIGGER': 24,
+    'PROP_TRIGGER_DELAY': 25,
+    'PROP_WHITE_BALANCE_RED_V': 26,
+    'PROP_ZOOM': 27,
+    'PROP_FOCUS': 28,
+    'PROP_GUID': 29,
+    'PROP_ISO_SPEED': 30,
+    'PROP_BACKLIGHT': 32,
+    'PROP_PAN': 33,
+    'PROP_TILT': 34,
+    'PROP_ROLL': 35,
+    'PROP_IRIS': 36,
+    'PROP_SETTINGS': 37,
+    'PROP_BUFFERSIZE': 38,
+    'PROP_AUTOFOCUS': 39,
+    'PROP_SAR_NUM': 40,
+    'PROP_SAR_DEN': 41,
+    'PROP_BACKEND': 42,
+    'PROP_CHANNEL': 43,
+    'PROP_AUTO_WB': 44,
+    'PROP_WB_TEMPERATURE': 45,
+    'PROP_CODEC_PIXEL_FORMAT': 46,
+    'PROP_BITRATE': 47,
+}
+
+class UnknownAPIError(ValueError):
+    pass
+
+class UnknownPropertyError(ValueError):
+    pass
+
 class VideoInputStream(ABC):
     """Video input stream provides a common interface for different video
     inputs/sources.
@@ -75,6 +166,7 @@ class CvVideoCamera(VideoInputStream):
     """
     def __init__(self,
                  source=0,
+                 api_name=None,
                  frame_size=None,
                  brightness=None,
                  contrast=None,
@@ -82,6 +174,7 @@ class CvVideoCamera(VideoInputStream):
                  is_color=True,
                  ):
         self.source = source
+        self.api_name = api_name
         self.frame_size = frame_size
         self.brightness = brightness
         self.contrast = contrast
@@ -101,18 +194,40 @@ class CvVideoCamera(VideoInputStream):
 
     def __call__(self):        
         return self.read()
-    
+
+    @property
+    def camera_api(self):
+        return self._cap.getBackendName()
+
+    def get_property(self, prop_name):
+        prop_id = CV_VIDEO_CAPTURE_PROPERTIES.get(prop_name, None)
+        if prop_id is None:
+            raise UnknownPropertyError()
+        return self._cap.get(prop_id)
+
+    def set_property(self, prop_name, prop_val):
+        prop_id = CV_VIDEO_CAPTURE_PROPERTIES.get(prop_name, None)
+        if prop_id is None:
+            raise UnknownPropertyError()
+        return self._cap.set(prop_id, prop_val)
+
     def open(self):
-        self._cap = cv2.VideoCapture(self.source)            
+        if self.api_name is not None:
+            api_id = CV_VIDEO_CAPTURE_APIS.get(self.api_name, None)
+            if api_id is None:
+                raise UnknownAPIError()
+            self._cap = cv2.VideoCapture(self.source, api_id)
+        else:
+            self._cap = cv2.VideoCapture(self.source)
         if self.frame_size is not None:
-            self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.frame_size[0])           
+            self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.frame_size[0])
             self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.frame_size[1])
         if self.brightness is not None:
             self._cap.set(cv2.CAP_PROP_BRIGHTNESS, self.brightness)
         if self.contrast is not None:
             self._cap.set(cv2.CAP_PROP_CONTRAST, self.contrast)
         if self.exposure is not None:
-            self._cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)              
+            self._cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
             
     def read(self):
         if not self._cap.isOpened():
@@ -134,14 +249,15 @@ class CvVideoCamera(VideoInputStream):
 class CvVideoInputFile(VideoInputStream):
     """OpenCV video input file.
     """
-    def __init__(self, filename="default.mp4", is_color=True):
+    def __init__(self, filename="default.mp4", api_name=None, is_color=True):
         self.filename = filename
+        self.api_name = api_name
         self.is_color = is_color
 
     def __getstate__(self):
         state = self.__dict__.copy()
         if '_capture' in state:
-            del state['_capture']
+            del state['_cap']
         return state
     
     def __setstate__(self, state):
@@ -151,13 +267,35 @@ class CvVideoInputFile(VideoInputStream):
     def __call__(self):        
         return self.read()
 
+    @property
+    def camera_api(self):
+        return self._cap.getBackendName()
+
+    def get_property(self, prop_name):
+        prop_id = CV_VIDEO_CAPTURE_PROPERTIES.get(prop_name, None)
+        if prop_id is None:
+            raise UnknownPropertyError()
+        return self._cap.get(prop_id)
+
+    def set_property(self, prop_name, prop_val):
+        prop_id = CV_VIDEO_CAPTURE_PROPERTIES.get(prop_name, None)
+        if prop_id is None:
+            raise UnknownPropertyError()
+        return self._cap.set(prop_id, prop_val)
+
     def open(self):
-        self._capture = cv2.VideoCapture(self.filename)
+        if self.api_name is not None:
+            api_id = CV_VIDEO_CAPTURE_APIS.get(self.api_name, None)
+            if api_id is None:
+                raise UnknownAPIError()
+            self._cap = cv2.VideoCapture(self.filename, api_id)
+        else:
+            self._cap = cv2.VideoCapture(self.filename)
             
     def read(self):
-        if not self._capture.isOpened():
+        if not self._cap.isOpened():
             raise EOFError
-        ret, frame = self._capture.read()
+        ret, frame = self._cap.read()
         if not ret:
             raise EOFError
         if not self.is_color:
@@ -165,10 +303,10 @@ class CvVideoInputFile(VideoInputStream):
         return frame
     
     def eof(self):
-        return not self._capture.isOpened()
+        return not self._cap.isOpened()
     
     def close(self):
-        self._capture.release()
+        self._cap.release()
 
 
 class CvVideoDisplay(VideoOutputStream):
@@ -216,7 +354,7 @@ class CvVideoOutputFile(VideoOutputStream):
     """
     def __init__(self,
                  filename="default.mp4",
-                 fourcc_code='MP4V',
+                 fourcc_code='mp4v',
                  fps=30.0,
                  frame_size=(640, 480),
                  is_color=True,
