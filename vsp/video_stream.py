@@ -238,6 +238,18 @@ class CvVideoCamera(VideoInputStream):
         if not self.is_color:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         return frame
+
+    def grab(self):
+        if not self._cap.isOpened():
+            raise EOFError
+        ret = self._cap.grab()
+        if not ret:
+            raise EOFError
+
+    def retrieve(self):
+        ret, frame = self._cap.retrieve()
+        if not ret:
+            raise EOFError
    
     def eof(self):
         return not self._cap.isOpened()
@@ -301,7 +313,19 @@ class CvVideoInputFile(VideoInputStream):
         if not self.is_color:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         return frame
-    
+
+    def grab(self):
+        if not self._cap.isOpened():
+            raise EOFError
+        ret = self._cap.grab()
+        if not ret:
+            raise EOFError
+
+    def retrieve(self):
+        ret, frame = self._cap.retrieve()
+        if not ret:
+            raise EOFError
+
     def eof(self):
         return not self._cap.isOpened()
     
