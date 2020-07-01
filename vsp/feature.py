@@ -10,6 +10,7 @@
 
 import collections
 
+import numpy as np
 
 Point = collections.namedtuple('Point', 'x y')   
 
@@ -17,7 +18,7 @@ class Keypoint:
     """Feature keypoint.
     """
     def __init__(self, point, size=0.0, angle=0.0):
-        self.point = point
+        self.point = np.asarray(point)
         self.size = size
         self.angle = angle       
    

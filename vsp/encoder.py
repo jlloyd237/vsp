@@ -18,7 +18,8 @@ class KeypointEncoder(Encoder):
         return self.encode(keypoints)
 		
     def encode(self, keypoints):
-        return np.array([kp.point + (kp.size,) for kp in keypoints])
+        return np.array([np.append(kp.point, kp.size) for kp in keypoints])
+
 
 
 class VoronoiEncoder(Encoder):
