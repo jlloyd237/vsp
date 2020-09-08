@@ -38,7 +38,7 @@ def main():
             display=CvVideoDisplay(name='preview'),
             writer=CvVideoOutputFile(is_color=False),
     ) as p:
-        keypoints = p.process(num_frames=300, outfile="demo1.mp4")
+        keypoints = p.process(num_frames=300, outfile="demo1.mp4", start_frame=1)
         #        keypoints = p.process(num_frames=300)
         print(f"keypoints.shape = {keypoints.shape}")
         print(f"keypoints[0] = {keypoints[0]}")
@@ -74,7 +74,7 @@ def main():
             view=KeypointView(color=(0, 255, 0)),
             display=CvVideoDisplay(name='preview'),
     ) as p:
-        keypoints = p.process(num_frames=100, infile="demo1.mp4")
+        keypoints = p.process(num_frames=100, infile="demo1.mp4", start_frame=1)
         print(f"keypoints.shape = {keypoints.shape}")
 
 

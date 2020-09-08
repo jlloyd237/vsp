@@ -59,7 +59,7 @@ class CameraStreamProcessor(Processor):
         self.display = display
         self.writer = writer
 
-    def process(self, num_frames, outfile=None):
+    def process(self, num_frames, outfile=None, start_frame=0):
         # initialization
         if len(self.pipeline) > 0:
             pipeline_func = compose(*self.pipeline[::-1])
@@ -83,6 +83,9 @@ class CameraStreamProcessor(Processor):
                 break
 
             inp = self.camera.read()
+
+            if i < start_frame:
+                continue
 
             if len(self.pipeline) > 0:
                 out = pipeline_func(inp)
@@ -124,7 +127,7 @@ class FileStreamProcessor(Processor):
         self.view = view
         self.display = display
 
-    def process(self, num_frames, infile):
+    def process(self, num_frames, infile, start_frame=0):
         # initialization
         self.reader.filename = infile
         self.reader.open()
@@ -144,6 +147,9 @@ class FileStreamProcessor(Processor):
         for i, inp in enumerate(self.reader):
             if i == num_frames:
                 break
+
+            if i < start_frame:
+                continue
 
             if len(self.pipeline) > 0:
                 out = pipeline_func(inp)
@@ -215,7 +221,7 @@ class CameraStreamProcessorMT(Processor):
                                              out_queues=self.pipeline_out_q)
             self.pipeline_f.start()
 
-    def process(self, num_frames, outfile=None):
+    def process(self, num_frames, outfile=None, start_frame=0):
         # Connect writer thread to camera and start running, if required
         writer_f = None
         if outfile and self.writer:
@@ -234,7 +240,12 @@ class CameraStreamProcessorMT(Processor):
         for i in range(num_frames):
             if self._cancel:
                 break
+
             frame = self.camera.read()
+
+            if i < start_frame:
+                continue
+
             for q in self.camera_out_q:
                 q.put(frame)
         
@@ -323,13 +334,17 @@ class FileStreamProcessorMT(Processor):
                                              out_queues=self.pipeline_out_q)
             self.pipeline_f.start()
         
-    def process(self, num_frames, infile):
+    def process(self, num_frames, infile, start_frame=0):
         # Get frames from reader and send to pipeline
         self.reader.filename = infile
         self.reader.open()         
         for i, frame in enumerate(self.reader):
             if i == num_frames:
                 break
+
+            if i < start_frame:
+                continue
+
             for q in self.reader_out_q:
                 q.put(frame)
         self.reader.close()
@@ -409,7 +424,7 @@ class CameraStreamProcessorMP(Processor):
                                               out_queues=self.pipeline_out_q)
             self.pipeline_f.start()
 
-    def process(self, num_frames, outfile=None):
+    def process(self, num_frames, outfile=None, start_frame=0):
         # Connect writer thread to camera and start running, if required
         writer_f = None
         if outfile and self.writer:
@@ -428,7 +443,12 @@ class CameraStreamProcessorMP(Processor):
         for i in range(num_frames):
             if self._cancel:
                 break
+
             frame = self.camera.read()
+
+            if i < start_frame:
+                continue
+
             for q in self.camera_out_q:
                 q.put(frame)
         
@@ -519,13 +539,17 @@ class FileStreamProcessorMP(Processor):
                                               out_queues=self.pipeline_out_q)
             self.pipeline_f.start()
         
-    def process(self, num_frames, infile):
+    def process(self, num_frames, infile, start_frame=0):
         # Get frames from reader and send to pipeline
         self.reader.filename = infile
         self.reader.open()         
         for i, frame in enumerate(self.reader):
             if i == num_frames:
                 break
+
+            if i < start_frame:
+                continue
+
             for q in self.reader_out_q:
                 q.put(frame)
         self.reader.close()

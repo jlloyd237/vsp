@@ -263,7 +263,7 @@ class CvContourBlobDetector(Detector):
         frame = cv2.blur(frame, (self.blur_kernel_size, self.blur_kernel_size))
         _, frame = cv2.threshold(frame, self.max_threshold, 255, cv2.THRESH_TOZERO_INV)
         _, frame = cv2.threshold(frame, self.min_threshold, 255, cv2.THRESH_BINARY)
-        _, contours, hierarchy = cv2.findContours(frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours, hierarchy = cv2.findContours(frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         keypoints_cv = [cv2.minEnclosingCircle(c) for c in contours]
         keypoints = [Keypoint(kp[0], kp[1]) for kp in keypoints_cv if kp[1] >= self.min_radius
             and kp[1] <= self.max_radius]
