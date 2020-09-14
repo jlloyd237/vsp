@@ -78,12 +78,11 @@ class CameraStreamProcessor(Processor):
         # run pipeline
         results = []
         self._cancel = False
-        for i in range(num_frames):
-            if self._cancel:
-                break
-
+        for i in range(start_frame + num_frames):
             inp = self.camera.read()
 
+            if self._cancel:
+                break
             if i < start_frame:
                 continue
 
@@ -145,11 +144,10 @@ class FileStreamProcessor(Processor):
         # run pipeline
         results = []
         for i, inp in enumerate(self.reader):
-            if i == num_frames:
-                break
-
             if i < start_frame:
                 continue
+            if i >= start_frame + num_frames:
+                break
 
             if len(self.pipeline) > 0:
                 out = pipeline_func(inp)
@@ -237,12 +235,11 @@ class CameraStreamProcessorMT(Processor):
 
         # Run pipeline
         self._cancel = False
-        for i in range(num_frames):
-            if self._cancel:
-                break
-
+        for i in range(start_frame + num_frames):
             frame = self.camera.read()
 
+            if self._cancel:
+                break
             if i < start_frame:
                 continue
 
@@ -339,11 +336,10 @@ class FileStreamProcessorMT(Processor):
         self.reader.filename = infile
         self.reader.open()         
         for i, frame in enumerate(self.reader):
-            if i == num_frames:
-                break
-
             if i < start_frame:
                 continue
+            if i >= start_frame + num_frames:
+                break
 
             for q in self.reader_out_q:
                 q.put(frame)
@@ -440,12 +436,11 @@ class CameraStreamProcessorMP(Processor):
 
         # Run pipeline
         self._cancel = False
-        for i in range(num_frames):
-            if self._cancel:
-                break
-
+        for i in range(start_frame + num_frames):
             frame = self.camera.read()
 
+            if self._cancel:
+                break
             if i < start_frame:
                 continue
 
@@ -544,11 +539,10 @@ class FileStreamProcessorMP(Processor):
         self.reader.filename = infile
         self.reader.open()         
         for i, frame in enumerate(self.reader):
-            if i == num_frames:
-                break
-
             if i < start_frame:
                 continue
+            if i >= start_frame + num_frames:
+                break
 
             for q in self.reader_out_q:
                 q.put(frame)
