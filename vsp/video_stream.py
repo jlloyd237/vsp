@@ -382,15 +382,12 @@ class CvVideoOutputFile(VideoOutputStream):
                  fps=30.0,
                  frame_size=(640, 480),
                  is_color=True,
-                 start_frame=0
                  ):
         self.filename = filename
         self.fourcc_code = fourcc_code
         self.fps = fps
         self.frame_size = frame_size
         self.is_color = is_color
-        self.start_frame = start_frame
-        self.frame_id = 0
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -411,20 +408,16 @@ class CvVideoOutputFile(VideoOutputStream):
                                        self.frame_size, self.is_color)
         
     def write(self, frame):
-        if self.frame_id >= self.start_frame:
-            self._writer.write(frame)
-        self.frame_id += 1
+        self._writer.write(frame)
     
     def close(self):
         self._writer.release()
-        self.frame_id = 0
 
 class CvImageOutputFileSeq(VideoOutputStream):
     """OpenCV image output file sequence.
     """
-    def __init__(self, filename="default.jpg", start_frame=0):
+    def __init__(self, filename="default.jpg"):
         self.filename = filename
-        self.start_frame = start_frame
         self.frame_id = 0
 
     def __call__(self, frame):
@@ -435,8 +428,7 @@ class CvImageOutputFileSeq(VideoOutputStream):
         self.frame_id = 0
 
     def write(self, frame):
-        if self.frame_id >= self.start_frame:
-            cv2.imwrite(self.filename_root + '_' + str(self.frame_id - self.start_frame) + self.filename_ext, frame)
+        cv2.imwrite(self.filename_root + '_' + str(self.frame_id) + self.filename_ext, frame)
         self.frame_id += 1
 
     def close(self):
