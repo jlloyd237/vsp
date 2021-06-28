@@ -10,7 +10,27 @@ from vsp.v4l2_camera import V4l2VideoCamera
 
 def main():
     with V4l2VideoCamera(device_path="/dev/video1", frame_size=(640, 480),
-                         num_buffers=2, is_color=False) as camera, \
+                         num_buffers=1, is_color=False) as camera, \
+        CvVideoDisplay(name="preview") as display:
+
+        display.open()
+
+        # give autoexposure a chance to adjust
+        for i in range(10):
+            frame = camera.read()
+            display.write(frame)
+
+        # capture individual frames
+        for i in range(5):
+            input("Press ENTER to capture frame: ")
+            # dump first frame (hardware double-buffering)
+            camera.read()
+            # use second frame
+            frame = camera.read()
+            display.write(frame)
+
+    with V4l2VideoCamera(device_path="/dev/video1", frame_size=(640, 480),
+                         num_buffers=1, is_color=False) as camera, \
         CvVideoDisplay(name="preview") as display, \
         CvVideoOutputFile(filename="demo.mp4", fps=120, frame_size=(640, 480),
                           is_color=False) as outfile:
