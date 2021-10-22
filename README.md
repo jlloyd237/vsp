@@ -1,14 +1,14 @@
 # Video Stream Processor
->A multithreaded/multiprocessing video stream processing framework.
+>A multithreaded/multiprocessing video stream processing library.
 
 Video Stream Processor is based on a dataflow processing model and can be operated in a single-threaded, multithreaded or multiprocessing environment.
 
 ## Installation
 
-To install the package on Windows, OS X or Linux, clone the repository and run the setup script from the repository root directory:
+To install the package on Windows or Linux, clone the repository and run the setup script from the repository root directory:
 
 ```sh
-python setup.py install
+pip install -e .
 ```
 
 ## Meta
