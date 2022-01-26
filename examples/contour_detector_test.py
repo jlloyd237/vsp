@@ -10,7 +10,8 @@ from vsp.detector import CvContourBlobDetector, optimize_contour_blob_detector_p
 
 
 def main():
-    with CvVideoCamera(is_color=False) as inp, CvVideoDisplay() as out:
+    with CvVideoCamera(source=1, api_name='DSHOW', is_color=False) as inp, CvVideoDisplay() as out:
+        out.open()
         frames = []
         for i in range(300):
             frame = inp.read()
@@ -22,7 +23,7 @@ def main():
     frames = frames[idx]
 
     params = optimize_contour_blob_detector_params(frames,
-                                                   target_blobs=127,
+                                                   target_blobs=331,
                                                    blur_kernel_size_half_range=(1, 10),
                                                    min_threshold_range=(0, 255),
                                                    max_threshold_range=(0, 255),
@@ -32,7 +33,7 @@ def main():
     print(params)
     det = CvContourBlobDetector(**params)
 
-    with CvVideoCamera(is_color=False) as inp, CvVideoDisplay() as out:
+    with CvVideoCamera(source=1, api_name='DSHOW', is_color=False) as inp, CvVideoDisplay() as out:
         for i in range(300):
             frame = inp.read()
             keypoints = det.detect(frame)
@@ -41,7 +42,7 @@ def main():
             print("pts.shape = {}".format(pts.shape))
             print("sizes.shape = {}".format(sizes.shape))
 
-            kpts = [cv2.KeyPoint(kp.point[0], kp.point[1], kp.size) for kp in keypoints]
+            kpts = [cv2.KeyPoint(kp.point[0], kp.point[1], 2 * kp.size) for kp in keypoints]
             frame_with_kpts = cv2.drawKeypoints(frame, kpts, np.array([]), (0, 0, 255),
                                                 cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
             out.write(frame_with_kpts)

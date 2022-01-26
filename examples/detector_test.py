@@ -10,7 +10,7 @@ from vsp.detector import CvBlobDetector, optimize_blob_detector_params
  
 
 def main():
-    with CvVideoCamera(is_color=False) as inp, CvVideoDisplay() as out:
+    with CvVideoCamera(source=1, api_name='DSHOW', is_color=False) as inp, CvVideoDisplay() as out:
         out.open()
         frames = []
         for i in range(300):
@@ -23,7 +23,7 @@ def main():
     frames = frames[idx]
 
     params = optimize_blob_detector_params(frames,
-                                           target_blobs=127,
+                                           target_blobs=331,
                                            min_threshold_range=(0, 300),
                                            max_threshold_range=(0, 300),
                                            min_area_range=(0, 200),
@@ -35,7 +35,7 @@ def main():
     print(params)
     det = CvBlobDetector(**params)        
 
-    with CvVideoCamera(is_color=False) as inp, CvVideoDisplay() as out:
+    with CvVideoCamera(source=1, api_name='DSHOW', is_color=False) as inp, CvVideoDisplay() as out:
         for i in range(300):
             frame = inp.read()
             keypoints = det.detect(frame)

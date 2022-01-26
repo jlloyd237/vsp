@@ -226,7 +226,7 @@ def optimize_blob_detector_params(frames,
                                    xrng,
                                    pop_size=50,
                                    elite_size=10,
-                                   max_iters=10)
+                                   max_iters=15)
 
     opt_params = {'min_threshold' : xopt[0],
                   'max_threshold' : xopt[1],
@@ -261,9 +261,8 @@ class CvContourBlobDetector(Detector):
 
     def detect(self, frame):
         frame = cv2.blur(frame, (self.blur_kernel_size, self.blur_kernel_size))
-        _, frame = cv2.threshold(frame, self.max_threshold, 255, cv2.THRESH_TOZERO_INV)
-        _, frame = cv2.threshold(frame, self.min_threshold, 255, cv2.THRESH_BINARY)
-        contours, hierarchy = cv2.findContours(frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        _, frame = cv2.threshold(frame, self.min_threshold, self.max_threshold, cv2.THRESH_BINARY)
+        _, contours, hierarchy = cv2.findContours(frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         keypoints_cv = [cv2.minEnclosingCircle(c) for c in contours]
         keypoints = [Keypoint(kp[0], kp[1]) for kp in keypoints_cv if kp[1] >= self.min_radius
             and kp[1] <= self.max_radius]
@@ -335,7 +334,7 @@ def optimize_contour_blob_detector_params(frames,
                                    xrng,
                                    pop_size=50,
                                    elite_size=10,
-                                   max_iters=10)
+                                   max_iters=15)
 
     opt_params = {'blur_kernel_size': 2 * int(xopt[0]) + 1,
                   'min_threshold': int(xopt[1]),
