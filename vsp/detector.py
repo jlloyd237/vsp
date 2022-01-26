@@ -7,6 +7,10 @@ from abc import ABC, abstractmethod
 import cv2
 import numpy as np
 
+from skimage import img_as_float
+from skimage.feature import blob_doh
+from skimage.color import rgb2gray
+
 from vsp.feature import Keypoint
 from vsp.optimizer import cross_entropy_optimizer
 
@@ -344,3 +348,24 @@ def optimize_contour_blob_detector_params(frames,
                   }
 
     return opt_params
+
+
+class SklDoHBlobDetector(Detector):
+    """Scikit-Learn Determinant-of-Hessian blob detector detects blob keypoints in images or video frames.
+    """
+    def __init__(self, min_sigma=5.0, max_sigma=6.0, num_sigma=5, threshold=0.015):
+        self.min_sigma = min_sigma
+        self.max_sigma = max_sigma
+        self.num_sigma = num_sigma
+        self.threshold = threshold
+
+    def __call__(self, frame):
+        return self.detect(frame)
+
+    def detect(self, frame):
+        sk_frame = img_as_float(frame)
+        sk_frame = rgb2gray(sk_frame)
+        blobs = blob_doh(sk_frame, min_sigma=self.min_sigma, max_sigma=self.max_sigma,
+                         num_sigma=self.num_sigma, threshold=self.threshold)
+        keypoints = [Keypoint((int(x), int(y)), int(r)) for y, x, r in blobs]
+        return keypoints

@@ -36,6 +36,7 @@ def main():
     det = CvBlobDetector(**params)        
 
     with CvVideoCamera(source=1, api_name='DSHOW', is_color=False) as inp, CvVideoDisplay() as out:
+        out.open()
         for i in range(300):
             frame = inp.read()
             keypoints = det.detect(frame)
