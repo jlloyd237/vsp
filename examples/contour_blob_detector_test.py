@@ -10,7 +10,8 @@ from vsp.detector import CvContourBlobDetector, optimize_contour_blob_detector_p
 
 
 def main():
-    with CvVideoCamera(source=1, api_name='DSHOW', is_color=False) as inp, CvVideoDisplay() as out:
+    # with CvVideoCamera(source=1, api_name='DSHOW', is_color=False) as inp, CvVideoDisplay() as out: # Windows
+    with CvVideoCamera(source=8, frame_size=(640, 480), is_color=False) as inp, CvVideoDisplay() as out:  # Linux
         out.open()
         frames = []
         for i in range(300):
@@ -25,24 +26,20 @@ def main():
     params = optimize_contour_blob_detector_params(frames,
                                                    target_blobs=331,
                                                    blur_kernel_size_half_range=(1, 10),
-                                                   min_threshold_range=(0, 255),
-                                                   max_threshold_range=(0, 255),
+                                                   thresh_block_size_half_range=(1, 10),
+                                                   thresh_constant_range=(-50, 50),
                                                    min_radius_range=(1, 11),
                                                    max_radius_range=(1, 21),
                                                    )
     print(params)
     det = CvContourBlobDetector(**params)
 
-    with CvVideoCamera(source=1, api_name='DSHOW', is_color=False) as inp, CvVideoDisplay() as out:
+    # with CvVideoCamera(source=1, api_name='DSHOW', is_color=False) as inp, CvVideoDisplay() as out: # Windows
+    with CvVideoCamera(source=8, frame_size=(640, 480), is_color=False) as inp, CvVideoDisplay() as out:  # Linux
         out.open()
         for i in range(300):
             frame = inp.read()
             keypoints = det.detect(frame)
-            pts = np.array([f.point for f in keypoints])
-            sizes = np.array([f.size for f in keypoints])
-            print("pts.shape = {}".format(pts.shape))
-            print("sizes.shape = {}".format(sizes.shape))
-
             kpts = [cv2.KeyPoint(kp.point[0], kp.point[1], 2 * kp.size) for kp in keypoints]
             frame_with_kpts = cv2.drawKeypoints(frame, kpts, np.array([]), (0, 0, 255),
                                                 cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
